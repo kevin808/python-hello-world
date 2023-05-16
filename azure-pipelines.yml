@@ -12,7 +12,7 @@ variables:
   webAppName: 'kl-python'
 
   # Agent VM image name
-  vmImageName: 'windows-latest'
+  vmImageName: 'Ubuntu-latest'
 
   # Environment name
   environmentName: 'kl-python'
