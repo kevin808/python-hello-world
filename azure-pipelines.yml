@@ -20,8 +20,8 @@ variables:
   # Project root folder. Point to the folder containing manage.py file.
   projectRoot: $(System.DefaultWorkingDirectory)
 
-  # Python version: 3.7
-  pythonVersion: '3.9'
+  # Set Python version
+  pythonVersion: '3.10'
 
 stages:
 - stage: Build
@@ -31,6 +31,13 @@ stages:
     pool:
       vmImage: $(vmImageName)
     steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python 3.10'
+      inputs:
+        versionSpec: $(pythonVersion)
+    
+    - bash: 'pip install  --target=".python_packages/lib/site-packages"  -r requirements.txt'
+      displayName: 'Install Application Dependencies'
 
     - task: ArchiveFiles@2
       displayName: 'Archive files'
