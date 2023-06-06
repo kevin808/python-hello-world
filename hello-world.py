@@ -1,5 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import time, flask
+import time
 
 hostName = "0.0.0.0"
 hostPort = 80
