@@ -7,7 +7,7 @@ trigger:
 - master
 
 variables:
-
+  system.debug: 'true'
   # Web app name
   webAppName: 'kl-python'
 
