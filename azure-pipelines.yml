@@ -67,7 +67,6 @@ stages:
         runOnce:
           deploy:
             steps:
-            - ${{ each app in parameters.apps}}:
               - task: AzureWebApp@1
                 displayName: "Azure App Service Deploy: ${{webAppName}}"
                 inputs:
