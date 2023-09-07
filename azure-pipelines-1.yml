@@ -78,29 +78,6 @@ stages:
             inputs:
               azureSubscription: $(azureServiceConnectionId)
               appName: $(webAppName)
+              deploymentMethod: runFromPackage
               package: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
 
-- stage: Deploy
-  displayName: Deploy stage
-  dependsOn: Build
-  condition: succeeded()
-  jobs:
-    - deployment: Deploy
-      displayName: Deploy
-      timeoutInMinutes: 0
-      environment: $(environmentName)
-      pool:
-        vmImage: $(vmImageName)
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-              - task: AzureWebApp@1
-                displayName: "Azure App Service Deploy: ${webAppName}"
-                inputs:
-                  azureSubscription: '$(azureSubscription)'
-                  appType: 'webAppLinux'
-                  deploymentMethod: runFromPackage
-                  appName: '${webAppName}'      
-                  ResourceGroupName: 'App'
-                  package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'              
