@@ -69,12 +69,12 @@ stages:
             steps:
             - ${{ each app in parameters.apps}}:
               - task: AzureWebApp@1
-                displayName: "Azure App Service Deploy: ${{app}}"
+                displayName: "Azure App Service Deploy: ${{webAppName}}"
                 inputs:
                   azureSubscription: '$(azureSubscription)'
                   appType: 'webAppLinux'
                   deploymentMethod: runFromPackage
-                  appName: '${{app}}'      
+                  appName: '${{webAppName}}'      
                   ResourceGroupName: 'App'
                   package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
 
