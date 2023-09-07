@@ -1,0 +1,106 @@
+# Python to Linux Web App on Azure
+# Build your Python project and deploy it to Azure as a Linux Web App.
+# Change python version to one thats appropriate for your application.
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+- master
+
+variables:
+  # Azure Resource Manager connection created during pipeline creation
+  azureServiceConnectionId: '5ce6e169-24b7-4767-9593-01f2d1fcd12b'
+
+  # Web app name
+  webAppName: 'kl-python'
+
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+  # Environment name
+  environmentName: 'kl-python'
+
+  # Project root folder. Point to the folder containing manage.py file.
+  projectRoot: $(System.DefaultWorkingDirectory)
+
+  # Python version: 3.10
+  pythonVersion: '3.10'
+
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: BuildJob
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(pythonVersion)'
+      displayName: 'Use Python $(pythonVersion)'
+
+    - bash: 'pip install  --target=".python_packages/lib/site-packages"  -r requirements.txt'
+      displayName: 'Install Application Dependencies'
+
+    - task: ArchiveFiles@2
+      displayName: 'Archive files'
+      inputs:
+        rootFolderOrFile: '$(projectRoot)'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        replaceExistingArchive: true
+
+    - upload: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+      displayName: 'Upload package'
+      artifact: drop
+
+- stage: Deploy
+  displayName: 'Deploy Web App'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeploymentJob
+    pool:
+      vmImage: $(vmImageName)
+    environment: $(environmentName)
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+            displayName: 'Use Python version'
+
+          - task: AzureWebApp@1
+            displayName: 'Deploy Azure Web App : kl-python'
+            inputs:
+              azureSubscription: $(azureServiceConnectionId)
+              appName: $(webAppName)
+              package: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
+
+- stage: Deploy
+  displayName: Deploy stage
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+    - deployment: Deploy
+      displayName: Deploy
+      timeoutInMinutes: 0
+      environment: $(environmentName)
+      pool:
+        vmImage: $(vmImageName)
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - task: AzureWebApp@1
+                displayName: "Azure App Service Deploy: ${webAppName}"
+                inputs:
+                  azureSubscription: '$(azureSubscription)'
+                  appType: 'webAppLinux'
+                  deploymentMethod: runFromPackage
+                  appName: '${webAppName}'      
+                  ResourceGroupName: 'App'
+                  package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'              
